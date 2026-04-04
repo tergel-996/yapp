@@ -1,6 +1,9 @@
 package bundle
 
 import (
+	"image"
+	"image/color"
+	"image/png"
 	"os"
 	"path/filepath"
 	"strings"
@@ -68,5 +71,40 @@ func TestCreate(t *testing.T) {
 	}
 	if !strings.Contains(string(launcher), "launch") {
 		t.Error("launcher doesn't call 'launch' subcommand")
+	}
+}
+
+func TestConvertPNGToICNS(t *testing.T) {
+	pngPath := filepath.Join(t.TempDir(), "icon.png")
+	icnsPath := filepath.Join(t.TempDir(), "icon.icns")
+
+	// Create a valid 256x256 PNG
+	img := image.NewRGBA(image.Rect(0, 0, 256, 256))
+	for y := 0; y < 256; y++ {
+		for x := 0; x < 256; x++ {
+			img.Set(x, y, color.RGBA{R: 0x4A, G: 0x9E, B: 0xF5, A: 0xFF})
+		}
+	}
+	f, err := os.Create(pngPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := png.Encode(f, img); err != nil {
+		f.Close()
+		t.Fatal(err)
+	}
+	f.Close()
+
+	err = ConvertPNGToICNS(pngPath, icnsPath)
+	if err != nil {
+		t.Fatalf("ConvertPNGToICNS failed: %v", err)
+	}
+
+	info, err := os.Stat(icnsPath)
+	if err != nil {
+		t.Fatalf("icns file not created: %v", err)
+	}
+	if info.Size() == 0 {
+		t.Error("icns file is empty")
 	}
 }
