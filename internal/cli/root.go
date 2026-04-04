@@ -21,6 +21,8 @@ func NewRootCmd() *cobra.Command {
 
 	cmd.AddCommand(newVersionCmd())
 	cmd.AddCommand(newLaunchCmd())
+	cmd.AddCommand(newInstallCmd())
+	cmd.AddCommand(newUninstallCmd())
 
 	return cmd
 }
