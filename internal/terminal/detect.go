@@ -26,5 +26,7 @@ func All() []Terminal {
 		&Kitty{},
 		&WezTerm{},
 		&Alacritty{},
+		&ITerm{},
+		&AppleTerminal{},
 	}
 }
