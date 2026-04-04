@@ -20,8 +20,11 @@ func FindByName(name string, terminals []Terminal) (Terminal, error) {
 	return nil, fmt.Errorf("unknown terminal %q", name)
 }
 
-// All returns all supported terminal adapters.
-// Populated after adapters are implemented in Task 4.
 func All() []Terminal {
-	return nil
+	return []Terminal{
+		&Ghostty{},
+		&Kitty{},
+		&WezTerm{},
+		&Alacritty{},
+	}
 }
