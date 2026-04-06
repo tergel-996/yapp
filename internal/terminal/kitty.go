@@ -9,6 +9,8 @@ type Kitty struct{}
 
 func (k *Kitty) Name() string { return "kitty" }
 
+func (k *Kitty) DisplayName() string { return "kitty" }
+
 func (k *Kitty) Detect() bool {
 	_, err := os.Stat("/Applications/kitty.app")
 	return err == nil
@@ -28,7 +30,6 @@ func (k *Kitty) BuildArgs(cfg LaunchConfig) []string {
 	if cfg.NoDecorations {
 		args = append(args, "-o", "hide_window_decorations=yes")
 	}
-	args = append(args, cfg.Command)
-	args = append(args, cfg.Args...)
+	args = append(args, cfg.ScriptPath)
 	return args
 }

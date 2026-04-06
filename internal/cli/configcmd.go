@@ -35,6 +35,7 @@ func newConfigCmd() *cobra.Command {
 			fmt.Printf("appearance.font_size = %d\n", cfg.Appearance.FontSize)
 			fmt.Printf("appearance.window_decorations = %v\n", cfg.Appearance.WindowDecorations)
 			fmt.Printf("appearance.title = %q\n", cfg.Appearance.Title)
+			fmt.Printf("yazi.path = %q\n", cfg.Yazi.Path)
 			fmt.Printf("app.bundle_id = %q\n", cfg.App.BundleID)
 			fmt.Printf("app.install_path = %q\n", cfg.App.InstallPath)
 			return nil

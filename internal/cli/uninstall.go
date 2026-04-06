@@ -7,13 +7,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tergel/yapp/internal/bundle"
 	"github.com/tergel/yapp/internal/config"
-	"github.com/tergel/yapp/internal/handler"
 )
 
 func newUninstallCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "uninstall",
-		Short: "Remove the Yapp.app bundle and handler registration",
+		Short: "Remove the Yapp.app bundle",
 		RunE:  runUninstall,
 	}
 }
@@ -29,11 +28,6 @@ func runUninstall(cmd *cobra.Command, args []string) error {
 	fmt.Printf("Removing %s...\n", appPath)
 	if err := bundle.Remove(appPath); err != nil {
 		return fmt.Errorf("removing bundle: %w", err)
-	}
-
-	fmt.Println("Resetting folder handler...")
-	if err := handler.Unregister(); err != nil {
-		fmt.Printf("Warning: could not reset handler: %v\n", err)
 	}
 
 	fmt.Printf("Yapp.app uninstalled. Config at %s was kept.\n", config.Dir())

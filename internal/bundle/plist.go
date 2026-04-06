@@ -1,6 +1,10 @@
 package bundle
 
-import "fmt"
+import (
+	"bytes"
+	"encoding/xml"
+	"fmt"
+)
 
 type PlistConfig struct {
 	BundleID   string
@@ -10,8 +14,12 @@ type PlistConfig struct {
 	IconFile   string
 }
 
+// GeneratePlist builds the Info.plist body for a Yapp-style .app bundle.
+// All interpolated values are run through encoding/xml's escaper so a
+// BundleName or BundleID containing `<`, `>`, `&`, or quotes cannot break
+// out of the enclosing <string> element.
 func GeneratePlist(cfg PlistConfig) string {
-	return fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?>
+	const header = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
@@ -35,5 +43,19 @@ func GeneratePlist(cfg PlistConfig) string {
     <false/>
 </dict>
 </plist>
-`, cfg.Executable, cfg.BundleID, cfg.BundleName, cfg.Version, cfg.Version, cfg.IconFile)
+`
+	return fmt.Sprintf(header,
+		xmlEscape(cfg.Executable),
+		xmlEscape(cfg.BundleID),
+		xmlEscape(cfg.BundleName),
+		xmlEscape(cfg.Version),
+		xmlEscape(cfg.Version),
+		xmlEscape(cfg.IconFile),
+	)
+}
+
+func xmlEscape(s string) string {
+	var buf bytes.Buffer
+	_ = xml.EscapeText(&buf, []byte(s))
+	return buf.String()
 }

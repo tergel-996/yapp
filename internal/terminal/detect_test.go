@@ -8,6 +8,7 @@ type mockTerminal struct {
 }
 
 func (m *mockTerminal) Name() string                        { return m.name }
+func (m *mockTerminal) DisplayName() string                 { return m.name }
 func (m *mockTerminal) Detect() bool                        { return m.detected }
 func (m *mockTerminal) Binary() string                      { return "/usr/bin/" + m.name }
 func (m *mockTerminal) BuildArgs(cfg LaunchConfig) []string { return nil }

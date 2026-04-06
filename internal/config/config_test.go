@@ -1,6 +1,8 @@
 package config
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -19,8 +21,54 @@ func TestDefaultConfig(t *testing.T) {
 	if cfg.Appearance.Title != "Yapp" {
 		t.Errorf("expected title 'Yapp', got %q", cfg.Appearance.Title)
 	}
+	if cfg.Yazi.Path != "" {
+		t.Errorf("expected empty yazi path by default, got %q", cfg.Yazi.Path)
+	}
 	if cfg.App.BundleID != "com.yapp.filemanager" {
 		t.Errorf("expected bundle ID 'com.yapp.filemanager', got %q", cfg.App.BundleID)
+	}
+}
+
+func TestLoadYaziPath(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("XDG_CONFIG_HOME", dir)
+
+	cfgDir := filepath.Join(dir, "yapp")
+	if err := os.MkdirAll(cfgDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(
+		filepath.Join(cfgDir, "config.toml"),
+		[]byte("[yazi]\npath = \"/custom/yazi\"\n"),
+		0o600,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if cfg.Yazi.Path != "/custom/yazi" {
+		t.Errorf("yazi.path = %q, want %q", cfg.Yazi.Path, "/custom/yazi")
+	}
+}
+
+func TestExpandPath(t *testing.T) {
+	home, _ := os.UserHomeDir()
+	cases := []struct {
+		in, want string
+	}{
+		{"", ""},
+		{"/abs/path", "/abs/path"},
+		{"~", home},
+		{"~/foo", filepath.Join(home, "foo")},
+		{"./rel", "./rel"},
+	}
+	for _, c := range cases {
+		if got := ExpandPath(c.in); got != c.want {
+			t.Errorf("ExpandPath(%q) = %q, want %q", c.in, got, c.want)
+		}
 	}
 }
 

@@ -3,12 +3,13 @@ package terminal
 import (
 	"fmt"
 	"os"
-	"strings"
 )
 
 type ITerm struct{}
 
 func (i *ITerm) Name() string { return "iterm" }
+
+func (i *ITerm) DisplayName() string { return "iTerm" }
 
 func (i *ITerm) Detect() bool {
 	_, err := os.Stat("/Applications/iTerm.app")
@@ -20,19 +21,23 @@ func (i *ITerm) Binary() string {
 }
 
 func (i *ITerm) BuildArgs(cfg LaunchConfig) []string {
-	cmd := cfg.Command
-	if len(cfg.Args) > 0 {
-		cmd += " " + strings.Join(cfg.Args, " ")
-	}
+	// iTerm2's `create window with default profile command "..."` tokenises
+	// its `command` argument via execvp-like splitting, which would mangle
+	// a path containing spaces. `write text` pipes text into the session's
+	// shell verbatim, so the new shell in the window executes the script
+	// path like any other command.
+	scriptPath := escapeAppleScriptString(cfg.ScriptPath)
+	title := escapeAppleScriptString(cfg.Title)
 
 	script := fmt.Sprintf(`
 tell application "iTerm"
 	activate
-	set newWindow to (create window with default profile command "%s")
-	tell current session of newWindow
+	create window with default profile
+	tell current session of current window
 		set name to "%s"
+		write text "%s"
 	end tell
-end tell`, cmd, cfg.Title)
+end tell`, title, scriptPath)
 
 	return []string{"-e", script}
 }

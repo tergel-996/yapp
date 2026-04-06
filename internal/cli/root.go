@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -25,7 +24,6 @@ func NewRootCmd() *cobra.Command {
 	cmd.AddCommand(newUninstallCmd())
 	cmd.AddCommand(newConfigCmd())
 	cmd.AddCommand(newSetTerminalCmd())
-	cmd.AddCommand(newRegisterCmd())
 
 	return cmd
 }
@@ -40,8 +38,11 @@ func newVersionCmd() *cobra.Command {
 	}
 }
 
-func Execute() {
-	if err := NewRootCmd().Execute(); err != nil {
-		os.Exit(1)
-	}
+// Execute runs the root Cobra command and returns its error (if any).
+// Callers in cmd/yapp/main.go are responsible for translating the error
+// into a process exit code. We do not call os.Exit here because when Yapp
+// runs inside the macOS Cocoa runloop, main() needs to unwind cleanly so
+// that the runloop can be stopped first.
+func Execute() error {
+	return NewRootCmd().Execute()
 }

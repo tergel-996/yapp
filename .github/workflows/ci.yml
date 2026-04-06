@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    # Yapp is a macOS-only tool; run the whole pipeline on macOS so that
+    # tests which shell out to sips / iconutil / osascript can actually
+    # exercise real system dependencies.
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: go mod verify
+        run: go mod verify
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: go build
+        run: go build -v ./...
+
+      - name: go test
+        run: go test -v ./...

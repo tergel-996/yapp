@@ -9,6 +9,8 @@ type Alacritty struct{}
 
 func (a *Alacritty) Name() string { return "alacritty" }
 
+func (a *Alacritty) DisplayName() string { return "Alacritty" }
+
 func (a *Alacritty) Detect() bool {
 	_, err := os.Stat("/Applications/Alacritty.app")
 	return err == nil
@@ -28,7 +30,6 @@ func (a *Alacritty) BuildArgs(cfg LaunchConfig) []string {
 	if cfg.NoDecorations {
 		args = append(args, "-o", "window.decorations=None")
 	}
-	args = append(args, "-e", cfg.Command)
-	args = append(args, cfg.Args...)
+	args = append(args, "-e", cfg.ScriptPath)
 	return args
 }

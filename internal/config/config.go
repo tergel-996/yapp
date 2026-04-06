@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/BurntSushi/toml"
 )
@@ -10,6 +11,7 @@ import (
 type Config struct {
 	Terminal   TerminalConfig   `toml:"terminal"`
 	Appearance AppearanceConfig `toml:"appearance"`
+	Yazi       YaziConfig       `toml:"yazi"`
 	App        AppConfig        `toml:"app"`
 }
 
@@ -21,6 +23,13 @@ type AppearanceConfig struct {
 	FontSize          int    `toml:"font_size"`
 	WindowDecorations bool   `toml:"window_decorations"`
 	Title             string `toml:"title"`
+}
+
+type YaziConfig struct {
+	// Path is an optional absolute path to the yazi binary. When set, it
+	// bypasses the PATH lookup and hardcoded Homebrew fallbacks in
+	// launch.findYazi. A leading "~/" is expanded to the user's home dir.
+	Path string `toml:"path"`
 }
 
 type AppConfig struct {
@@ -43,6 +52,21 @@ func Default() Config {
 			InstallPath: filepath.Join(homeDir(), "Applications"),
 		},
 	}
+}
+
+// ExpandPath resolves a config-supplied path, turning a leading "~/" into an
+// absolute home-relative path. Empty strings are returned unchanged.
+func ExpandPath(p string) string {
+	if p == "" {
+		return p
+	}
+	if strings.HasPrefix(p, "~/") {
+		return filepath.Join(homeDir(), p[2:])
+	}
+	if p == "~" {
+		return homeDir()
+	}
+	return p
 }
 
 func Dir() string {
