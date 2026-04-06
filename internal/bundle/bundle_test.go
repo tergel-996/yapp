@@ -14,12 +14,19 @@ func TestCreate(t *testing.T) {
 	dir := t.TempDir()
 	appPath := filepath.Join(dir, "Yapp.app")
 
+	// Create a fake binary to copy into the bundle
+	fakeBinary := filepath.Join(dir, "yapp-cli")
+	fakeContent := []byte{0x7f, 0x45, 0x4c, 0x46} // ELF magic bytes (fake binary content)
+	if err := os.WriteFile(fakeBinary, fakeContent, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
 	opts := CreateOptions{
 		AppPath:    appPath,
 		BundleID:   "com.yapp.filemanager",
 		BundleName: "Yapp",
 		Version:    "1.0.0",
-		YappBinary: "/usr/local/bin/yapp",
+		YappBinary: fakeBinary,
 	}
 
 	if err := Create(opts); err != nil {
@@ -51,7 +58,7 @@ func TestCreate(t *testing.T) {
 		t.Error("Info.plist missing bundle ID")
 	}
 
-	// Check launcher script exists and is executable
+	// Check launcher binary exists, is executable, and matches the source binary
 	launcherPath := filepath.Join(appPath, "Contents", "MacOS", "Yapp")
 	info, err := os.Stat(launcherPath)
 	if err != nil {
@@ -60,17 +67,12 @@ func TestCreate(t *testing.T) {
 	if info.Mode()&0o111 == 0 {
 		t.Error("launcher is not executable")
 	}
-
-	// Check launcher content
 	launcher, err := os.ReadFile(launcherPath)
 	if err != nil {
 		t.Fatalf("reading launcher: %v", err)
 	}
-	if !strings.Contains(string(launcher), "/usr/local/bin/yapp") {
-		t.Error("launcher doesn't reference yapp binary")
-	}
-	if !strings.Contains(string(launcher), "launch") {
-		t.Error("launcher doesn't call 'launch' subcommand")
+	if string(launcher) != string(fakeContent) {
+		t.Error("launcher binary content doesn't match source binary")
 	}
 }
 

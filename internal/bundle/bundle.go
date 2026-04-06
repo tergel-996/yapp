@@ -39,11 +39,16 @@ func Create(opts CreateOptions) error {
 		return fmt.Errorf("writing Info.plist: %w", err)
 	}
 
-	launcher := fmt.Sprintf("#!/bin/bash\nexec \"%s\" launch \"$@\"\n", opts.YappBinary)
-
+	// Copy the yapp-cli binary directly -- the .app executable must be a
+	// native Mach-O binary. A shell script causes Rosetta crashes on Apple Silicon.
+	// The binary detects invocation as "Yapp" (via os.Args[0]) and runs launch.
 	launcherPath := filepath.Join(macosDir, opts.BundleName)
-	if err := os.WriteFile(launcherPath, []byte(launcher), 0o755); err != nil {
-		return fmt.Errorf("writing launcher: %w", err)
+	data, err := os.ReadFile(opts.YappBinary)
+	if err != nil {
+		return fmt.Errorf("reading yapp binary: %w", err)
+	}
+	if err := os.WriteFile(launcherPath, data, 0o755); err != nil {
+		return fmt.Errorf("writing launcher binary: %w", err)
 	}
 
 	if opts.IconPath != "" {
