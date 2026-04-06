@@ -15,7 +15,7 @@ func TestGhosttyBuildArgs(t *testing.T) {
 		"-na", "Ghostty.app", "--args",
 		"--title=Yapp",
 		"--font-size=16",
-		"--window-decoration=false",
+		"--window-decoration=false", // NoDecorations: true in test
 		"--quit-after-last-window-closed=true",
 		"-e", "/usr/local/bin/yazi",
 	}

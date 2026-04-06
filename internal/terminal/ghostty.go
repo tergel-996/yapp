@@ -28,6 +28,8 @@ func (g *Ghostty) BuildArgs(cfg LaunchConfig) []string {
 	}
 	if cfg.NoDecorations {
 		args = append(args, "--window-decoration=false")
+	} else {
+		args = append(args, "--window-decoration=true")
 	}
 	args = append(args, "--quit-after-last-window-closed=true")
 	args = append(args, "-e", cfg.Command)
