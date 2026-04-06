@@ -157,9 +157,13 @@ func createMarker() (string, func(), error) {
 }
 
 // createLaunchScript writes an executable /bin/sh script that:
-//  1. installs a trap to remove the marker file on every exit path
-//     (clean exit, SIGHUP from force-closed window, SIGINT, SIGTERM), and
-//  2. runs yazi with the caller's positional args, then waits for it.
+//  1. restores a useful PATH (the .app sandbox gives only
+//     /usr/bin:/bin:/usr/sbin:/sbin, which hides fzf / ripgrep / zoxide
+//     and every other yazi shell-out plugin),
+//  2. installs a trap to remove the marker file on every exit path
+//     (clean exit, SIGHUP from force-closed window, SIGINT, SIGTERM),
+//     and
+//  3. runs yazi with the caller's positional args, then waits for it.
 //
 // Crucially this does NOT use `exec` to replace the shell. `exec` would
 // hand the process over to yazi and the shell would vanish, taking the
@@ -174,6 +178,16 @@ func createMarker() (string, func(), error) {
 // boundary and ends up running the literal `trap` builtin with no effect.
 // Passing a one-word script path through `-e` is unambiguous regardless of
 // how each terminal tokenises its command line.
+//
+// PATH restoration order:
+//  1. `/usr/libexec/path_helper -s` to pick up /etc/paths and /etc/paths.d/
+//     (this is what a normal login shell does on macOS).
+//  2. Prepend /opt/homebrew/bin, /usr/local/bin, ~/.cargo/bin, ~/.local/bin
+//     as a belt-and-braces fallback for users whose tools aren't covered
+//     by path_helper.
+//  3. Source ~/.config/yapp/env.sh if present, so users with exotic
+//     layouts (Nix, asdf, pyenv shims, ~/.bin, etc.) have a single
+//     escape hatch without modifying login shell rc files.
 func createLaunchScript(marker, yaziPath string, userArgs []string) (string, func(), error) {
 	path := filepath.Join(os.TempDir(), fmt.Sprintf("yapp-%d.sh", os.Getpid()))
 
@@ -186,8 +200,18 @@ func createLaunchScript(marker, yaziPath string, userArgs []string) (string, fun
 	yaziCmd := strings.Join(parts, " ")
 
 	trapBody := "rm -f " + shQuote(marker)
+
+	const pathSetup = `if [ -x /usr/libexec/path_helper ]; then
+    eval "$(/usr/libexec/path_helper -s)"
+fi
+export PATH="/opt/homebrew/bin:/usr/local/bin:$HOME/.cargo/bin:$HOME/.local/bin:$PATH"
+if [ -f "$HOME/.config/yapp/env.sh" ]; then
+    . "$HOME/.config/yapp/env.sh"
+fi
+`
 	content := fmt.Sprintf(
-		"#!/bin/sh\ntrap %s EXIT HUP INT TERM\n%s\n",
+		"#!/bin/sh\n%strap %s EXIT HUP INT TERM\n%s\n",
+		pathSetup,
 		shQuote(trapBody),
 		yaziCmd,
 	)
