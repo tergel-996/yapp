@@ -12,6 +12,7 @@ func TestGhosttyBuildArgs(t *testing.T) {
 	})
 
 	expected := []string{
+		"-na", "Ghostty.app", "--args",
 		"--title=Yapp",
 		"--font-size=16",
 		"--window-decoration=false",
@@ -32,6 +33,7 @@ func TestKittyBuildArgs(t *testing.T) {
 	})
 
 	expected := []string{
+		"-na", "kitty.app", "--args",
 		"--title", "Yapp",
 		"-o", "font_size=16",
 		"-o", "hide_window_decorations=yes",
@@ -70,6 +72,7 @@ func TestAlacrittyBuildArgs(t *testing.T) {
 	})
 
 	expected := []string{
+		"-na", "Alacritty.app", "--args",
 		"--title", "Yapp",
 		"-o", "font.size=16",
 		"-o", "window.decorations=None",

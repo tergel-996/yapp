@@ -2,7 +2,7 @@ package terminal
 
 import (
 	"fmt"
-	"os/exec"
+	"os"
 )
 
 type Alacritty struct{}
@@ -10,22 +10,18 @@ type Alacritty struct{}
 func (a *Alacritty) Name() string { return "alacritty" }
 
 func (a *Alacritty) Detect() bool {
-	_, err := exec.LookPath("alacritty")
+	_, err := os.Stat("/Applications/Alacritty.app")
 	return err == nil
 }
 
 func (a *Alacritty) Binary() string {
-	path, err := exec.LookPath("alacritty")
-	if err != nil {
-		return "alacritty"
-	}
-	return path
+	return "/usr/bin/open"
 }
 
 func (a *Alacritty) BuildArgs(cfg LaunchConfig) []string {
-	args := []string{
-		"--title", cfg.Title,
-	}
+	// On macOS, Alacritty must be launched via `open -na Alacritty.app --args ...`
+	args := []string{"-na", "Alacritty.app", "--args"}
+	args = append(args, "--title", cfg.Title)
 	if cfg.FontSize > 0 {
 		args = append(args, "-o", fmt.Sprintf("font.size=%d", cfg.FontSize))
 	}

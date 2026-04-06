@@ -1,13 +1,19 @@
 package terminal
 
-import "os/exec"
+import (
+	"os"
+	"os/exec"
+)
 
 type WezTerm struct{}
 
 func (w *WezTerm) Name() string { return "wezterm" }
 
 func (w *WezTerm) Detect() bool {
-	_, err := exec.LookPath("wezterm")
+	if _, err := exec.LookPath("wezterm"); err == nil {
+		return true
+	}
+	_, err := os.Stat("/Applications/WezTerm.app")
 	return err == nil
 }
 

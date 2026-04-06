@@ -2,7 +2,7 @@ package terminal
 
 import (
 	"fmt"
-	"os/exec"
+	"os"
 )
 
 type Kitty struct{}
@@ -10,22 +10,18 @@ type Kitty struct{}
 func (k *Kitty) Name() string { return "kitty" }
 
 func (k *Kitty) Detect() bool {
-	_, err := exec.LookPath("kitty")
+	_, err := os.Stat("/Applications/kitty.app")
 	return err == nil
 }
 
 func (k *Kitty) Binary() string {
-	path, err := exec.LookPath("kitty")
-	if err != nil {
-		return "kitty"
-	}
-	return path
+	return "/usr/bin/open"
 }
 
 func (k *Kitty) BuildArgs(cfg LaunchConfig) []string {
-	args := []string{
-		"--title", cfg.Title,
-	}
+	// On macOS, kitty must be launched via `open -na kitty.app --args ...`
+	args := []string{"-na", "kitty.app", "--args"}
+	args = append(args, "--title", cfg.Title)
 	if cfg.FontSize > 0 {
 		args = append(args, "-o", fmt.Sprintf("font_size=%d", cfg.FontSize))
 	}

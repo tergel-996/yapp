@@ -2,7 +2,7 @@ package terminal
 
 import (
 	"fmt"
-	"os/exec"
+	"os"
 )
 
 type Ghostty struct{}
@@ -10,22 +10,19 @@ type Ghostty struct{}
 func (g *Ghostty) Name() string { return "ghostty" }
 
 func (g *Ghostty) Detect() bool {
-	_, err := exec.LookPath("ghostty")
+	_, err := os.Stat("/Applications/Ghostty.app")
 	return err == nil
 }
 
 func (g *Ghostty) Binary() string {
-	path, err := exec.LookPath("ghostty")
-	if err != nil {
-		return "ghostty"
-	}
-	return path
+	return "/usr/bin/open"
 }
 
 func (g *Ghostty) BuildArgs(cfg LaunchConfig) []string {
-	args := []string{
-		fmt.Sprintf("--title=%s", cfg.Title),
-	}
+	// On macOS, Ghostty must be launched via `open -na Ghostty.app --args ...`
+	// The `ghostty` binary in PATH is the CLI helper and cannot open windows.
+	args := []string{"-na", "Ghostty.app", "--args"}
+	args = append(args, fmt.Sprintf("--title=%s", cfg.Title))
 	if cfg.FontSize > 0 {
 		args = append(args, fmt.Sprintf("--font-size=%d", cfg.FontSize))
 	}
