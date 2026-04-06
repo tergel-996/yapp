@@ -10,6 +10,24 @@ import (
 	"github.com/tergel/yapp/internal/terminal"
 )
 
+// findYazi locates the yazi binary. When launched from a .app bundle, the
+// system PATH is limited to /usr/bin:/bin:/usr/sbin:/sbin and does not include
+// Homebrew, so we fall back to known installation paths.
+func findYazi() (string, error) {
+	if path, err := exec.LookPath("yazi"); err == nil {
+		return path, nil
+	}
+	for _, candidate := range []string{
+		"/opt/homebrew/bin/yazi", // Apple Silicon Homebrew
+		"/usr/local/bin/yazi",    // Intel Homebrew
+	} {
+		if _, err := os.Stat(candidate); err == nil {
+			return candidate, nil
+		}
+	}
+	return "", fmt.Errorf("yazi not found; install with: brew install yazi")
+}
+
 func newLaunchCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "launch [path]",
@@ -25,9 +43,9 @@ func runLaunch(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("loading config: %w", err)
 	}
 
-	yaziPath, err := exec.LookPath("yazi")
+	yaziPath, err := findYazi()
 	if err != nil {
-		return fmt.Errorf("yazi not found in PATH; install it with: brew install yazi")
+		return err
 	}
 
 	var term terminal.Terminal

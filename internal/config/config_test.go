@@ -13,8 +13,8 @@ func TestDefaultConfig(t *testing.T) {
 	if cfg.Appearance.FontSize != 14 {
 		t.Errorf("expected font size 14, got %d", cfg.Appearance.FontSize)
 	}
-	if cfg.Appearance.WindowDecorations != false {
-		t.Error("expected window decorations false")
+	if cfg.Appearance.WindowDecorations != true {
+		t.Error("expected window decorations true")
 	}
 	if cfg.Appearance.Title != "Yapp" {
 		t.Errorf("expected title 'Yapp', got %q", cfg.Appearance.Title)

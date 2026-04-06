@@ -35,7 +35,7 @@ func Default() Config {
 		},
 		Appearance: AppearanceConfig{
 			FontSize:          14,
-			WindowDecorations: false,
+			WindowDecorations: true,
 			Title:             "Yapp",
 		},
 		App: AppConfig{
