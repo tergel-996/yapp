@@ -11,7 +11,7 @@ var Version = "dev"
 
 func NewRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "yapp",
+		Use:   "yapp-cli",
 		Short: "Yazi as a standalone macOS app",
 		Long:  "Yapp wraps the yazi terminal file manager in its own macOS application identity.",
 		RunE: func(cmd *cobra.Command, args []string) error {

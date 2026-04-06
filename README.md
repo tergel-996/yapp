@@ -11,19 +11,18 @@ If you use yazi inside your terminal, opening it creates another terminal window
 ## Install
 
 ```bash
-brew tap tergel/yapp
-brew install yapp
-yapp install
+brew install tergel-996/yapp/yapp
+yapp-cli install
 ```
 
 ## Usage
 
 ```bash
 # Launch yazi as a standalone app
-yapp launch
+yapp-cli launch
 
 # Launch with a specific path
-yapp launch ~/Downloads
+yapp-cli launch ~/Downloads
 
 # Or just open Yapp.app from Spotlight/Raycast/Dock
 ```
@@ -32,16 +31,16 @@ yapp launch ~/Downloads
 
 ```bash
 # Show current config
-yapp config show
+yapp-cli config show
 
 # Edit config in $EDITOR
-yapp config edit
+yapp-cli config edit
 
 # Set terminal emulator
-yapp set-terminal ghostty    # or: kitty, wezterm, alacritty, iterm, terminal, auto
+yapp-cli set-terminal ghostty    # or: kitty, wezterm, alacritty, iterm, terminal, auto
 
 # Register as default folder handler (experimental)
-yapp register
+yapp-cli register
 ```
 
 Config lives at `~/.config/yapp/config.toml`:
@@ -63,7 +62,7 @@ install_path = "~/Applications"
 ## Custom Icon
 
 ```bash
-yapp install --icon /path/to/icon.png
+yapp-cli install --icon /path/to/icon.png
 ```
 
 Provide a 1024x1024 PNG. Yapp converts it to icns using macOS built-in tools.
@@ -82,7 +81,7 @@ Provide a 1024x1024 PNG. Yapp converts it to icns using macOS built-in tools.
 ## Uninstall
 
 ```bash
-yapp uninstall
+yapp-cli uninstall
 brew uninstall yapp
 ```
 

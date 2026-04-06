@@ -11,15 +11,15 @@ class Yapp < Formula
 
   def install
     ldflags = "-X github.com/tergel/yapp/internal/cli.Version=#{version}"
-    system "go", "build", *std_go_args(ldflags:), "./cmd/yapp"
+    system "go", "build", *std_go_args(ldflags:, output: bin/"yapp-cli"), "./cmd/yapp"
   end
 
   def post_install
-    ohai "Run 'yapp install' to create the Yapp.app bundle"
-    ohai "Run 'yapp set-terminal auto' to configure your terminal emulator"
+    ohai "Run 'yapp-cli install' to create the Yapp.app bundle"
+    ohai "Run 'yapp-cli set-terminal auto' to configure your terminal emulator"
   end
 
   test do
-    assert_match version.to_s, shell_output("#{bin}/yapp version")
+    assert_match version.to_s, shell_output("#{bin}/yapp-cli version")
   end
 end
