@@ -73,11 +73,19 @@ install_path = "~/Applications"
 
 ## Custom Icon
 
+Yapp ships with an embedded default icon, so `yapp-cli install` produces
+an `.app` bundle with a real icon in Spotlight, Dock, and Cmd+Tab out of
+the box. To override it, pass `--icon`:
+
 ```bash
 yapp-cli install --icon /path/to/icon.png
 ```
 
-Provide a 1024x1024 PNG. Yapp converts it to icns using macOS built-in tools.
+Provide a 1024x1024 PNG. Yapp converts it to `.icns` using macOS built-in
+tools (`sips`, `iconutil`).
+
+To regenerate the embedded default icon from source, run
+`go run ./tools/icongen`.
 
 ## Supported Terminals
 

@@ -67,7 +67,7 @@ When modifying `main.go` or `gui/`, preserve: the `LockOSThread` call, the worke
 
 All user-controlled fields that land in `Info.plist` (`BundleID`, `BundleName`, `Version`, `IconFile`) are escaped through `xml.EscapeText` in `plist.go`. Don't switch this back to raw `fmt.Sprintf` interpolation — a config with `bundle_id = "foo</string><string>bar"` would otherwise inject a second `<string>` element into the plist. There's a regression test (`TestGeneratePlistEscapesHostileValues`).
 
-Icons: `ConvertPNGToICNS` shells out to macOS `sips` + `iconutil` to produce a multi-resolution `.icns` from a single PNG.
+Icons: `ConvertPNGToICNS` shells out to macOS `sips` + `iconutil` to produce a multi-resolution `.icns` from a single PNG. `internal/bundle/defaulticon.png` is embedded into the binary via `//go:embed` in `default_icon.go` and used by `internal/cli/install.go` as the fallback when the user does not pass `--icon`, so a fresh install always ends up with a real icon in Spotlight/Dock/Cmd+Tab rather than the generic Unix-executable icon. The PNG is reproducible from source via `go run ./tools/icongen` (stdlib-only SDF renderer; no image-processing deps).
 
 ### Terminal strategy (`internal/terminal`)
 

@@ -43,16 +43,27 @@ func runInstall(iconPath string) error {
 
 	appPath := filepath.Join(cfg.App.InstallPath, "Yapp.app")
 
-	// Convert icon if provided
-	icnsPath := ""
-	if iconPath != "" {
-		icnsPath = filepath.Join(os.TempDir(), "yapp-icon.icns")
-		fmt.Printf("Converting icon %s to icns...\n", iconPath)
-		if err := bundle.ConvertPNGToICNS(iconPath, icnsPath); err != nil {
-			return fmt.Errorf("converting icon: %w", err)
+	// Resolve the PNG source. An explicit --icon wins; otherwise fall
+	// back to the embedded default (bundle.DefaultIconPNG) which we
+	// stage into a temp file so the existing sips/iconutil pipeline in
+	// ConvertPNGToICNS can read it like any other file on disk.
+	pngSource := iconPath
+	if pngSource == "" {
+		defaultPNGPath := filepath.Join(os.TempDir(), "yapp-default-icon.png")
+		if err := os.WriteFile(defaultPNGPath, bundle.DefaultIconPNG, 0o644); err != nil {
+			return fmt.Errorf("writing embedded default icon: %w", err)
 		}
-		defer os.Remove(icnsPath)
+		defer os.Remove(defaultPNGPath)
+		pngSource = defaultPNGPath
+		fmt.Println("Using embedded default icon (pass --icon to override).")
 	}
+
+	icnsPath := filepath.Join(os.TempDir(), "yapp-icon.icns")
+	fmt.Printf("Converting icon %s to icns...\n", pngSource)
+	if err := bundle.ConvertPNGToICNS(pngSource, icnsPath); err != nil {
+		return fmt.Errorf("converting icon: %w", err)
+	}
+	defer os.Remove(icnsPath)
 
 	fmt.Printf("Installing Yapp.app to %s...\n", appPath)
 
