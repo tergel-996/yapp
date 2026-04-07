@@ -115,6 +115,14 @@ Yapp.app, it automatically refreshes the bundle's copy of the binary from
 Homebrew's, so you never run stale code from inside `~/Applications/Yapp.app`.
 You don't need to re-run `yapp-cli install` after a brew upgrade.
 
+## Troubleshooting
+
+Launch errors in bundle mode are written to `~/Library/Logs/Yapp/yapp.log`.
+If Yapp's Dock icon appears and disappears without opening a window, or
+`yapp-cli launch` fails from Spotlight/Raycast with no visible error,
+check that file — it records what went wrong (missing yazi, terminal
+launch failure, config parse error, etc.).
+
 ## Releasing
 
 The Homebrew formula lives in the separate tap repo at
