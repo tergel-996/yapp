@@ -10,15 +10,31 @@
 // cocoa_darwin.go, so we declare the symbol manually.
 extern void yappCocoaHandleReopen(void);
 
-// YappAppDelegate is Yapp's minimal NSApplicationDelegate. It only
-// implements applicationShouldHandleReopen, which macOS calls when the
-// user clicks the Dock icon of a running app. We bounce that into Go
+// YappAppDelegate is Yapp's minimal NSApplicationDelegate. It implements
+// two reactivation paths, both of which funnel into the same Go callback
 // (yappCocoaHandleReopen), which in turn activates the terminal window
-// that is actually showing yazi.
+// that is actually showing yazi:
+//
+//  - applicationDidBecomeActive: fires when Yapp transitions from
+//    inactive to active, covering Cmd+Tab switches and Dock-icon clicks
+//    on an inactive Yapp.
+//
+//  - applicationShouldHandleReopen: fires on Dock-icon clicks even when
+//    Yapp is *already* the active app; in that case didBecomeActive does
+//    not fire (no state transition), so without this method a user who
+//    clicks Yapp's Dock icon while already looking at Yapp's menu bar
+//    would have no way to bring the yazi window back to the front.
+//
+// Both delegate calls happen on the Cocoa main thread. The Go-side
+// handler does the heavy lifting on a goroutine so we don't block here.
 @interface YappAppDelegate : NSObject <NSApplicationDelegate>
 @end
 
 @implementation YappAppDelegate
+- (void)applicationDidBecomeActive:(NSNotification *)notification {
+    yappCocoaHandleReopen();
+}
+
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)sender
                     hasVisibleWindows:(BOOL)flag {
     yappCocoaHandleReopen();

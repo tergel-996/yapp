@@ -23,16 +23,26 @@ import "C"
 
 import "sync"
 
-// activateHandler is the Go callback invoked when the user clicks Yapp's
-// Dock icon while Yapp is running. launch.go installs a closure that
-// runs `osascript -e 'tell application "<term>" to activate'` to bring
-// the correct terminal window back to the foreground.
+// activateHandler is the Go callback invoked when Yapp is reactivated
+// (Cmd+Tab switch, Dock icon click, or Finder re-launch of the already-
+// running app). launch.go installs a closure that runs
+// `osascript -e 'tell application "<term>" to activate'` to bring the
+// terminal window rendering yazi back to the foreground.
 //
-// It is set from a goroutine and read from the Cocoa main thread, so
-// access is guarded by a mutex.
+// firstActivationSeen gates out the *initial* activation that Cocoa
+// fires during `[NSApp activateIgnoringOtherApps:YES]` in yapp_run().
+// That one happens before the terminal has been spawned, so running
+// the handler at that moment would either no-op (terminal not yet
+// running) or activate a pre-existing instance of the same terminal
+// application (not the one that will shortly be hosting yazi). Skipping
+// the first reactivation call avoids both of those wrong answers.
+//
+// activateHandler / firstActivationSeen are set from a worker goroutine
+// and read from the Cocoa main thread, so access is guarded by a mutex.
 var (
-	activateMu      sync.Mutex
-	activateHandler func()
+	activateMu          sync.Mutex
+	activateHandler     func()
+	firstActivationSeen bool
 )
 
 // Run blocks the calling goroutine in the Cocoa NSApplication event
@@ -56,6 +66,15 @@ func SetActivateHandler(f func()) {
 //export yappCocoaHandleReopen
 func yappCocoaHandleReopen() {
 	activateMu.Lock()
+	if !firstActivationSeen {
+		// Swallow the startup activation (see the comment on
+		// firstActivationSeen). Subsequent reactivations — Cmd+Tab
+		// switches, Dock-icon clicks, Finder re-launches — are real
+		// user actions and must fire the handler.
+		firstActivationSeen = true
+		activateMu.Unlock()
+		return
+	}
 	f := activateHandler
 	activateMu.Unlock()
 	if f != nil {
