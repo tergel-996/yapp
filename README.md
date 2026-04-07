@@ -1,12 +1,30 @@
 # Yapp
 
-Yazi as a standalone macOS application.
+A macOS identity wrapper for [yazi](https://github.com/sxyazi/yazi).
 
-Yapp wraps the [yazi](https://github.com/sxyazi/yazi) terminal file manager in its own macOS app bundle, giving it a separate identity from your terminal emulator. It shows up in Spotlight, Raycast, Dock, and Cmd+Tab as its own app.
+When you run yazi inside a terminal, it looks like any other window of that
+terminal in Cmd+Tab — indistinguishable from a regular shell. Yapp gives yazi
+its own labeled entry in Spotlight, Raycast, Dock, and Cmd+Tab so you can
+always find the yazi session at a glance. Cmd+Tabbing to "Yapp" (or clicking
+its Dock icon) brings the terminal window rendering yazi back to the
+foreground.
 
 ## Why
 
-If you use yazi inside your terminal, opening it creates another terminal window. You end up with multiple instances of the same terminal in your app switcher. Yapp solves this by giving yazi its own application identity.
+Without Yapp, every yazi session shares its host terminal's Cmd+Tab identity
+— you can have six Ghostty windows in your switcher and no way to tell which
+one is yazi. Yapp adds a stable, clearly-labeled handle for the yazi session
+so you can always get back to it.
+
+**Heads up — what Yapp is not.** Yapp is an identity wrapper, not a terminal
+emulator. macOS does not allow one app to "adopt" another app's windows, so
+while Yapp is running you'll see **both** the "Yapp" entry **and** your
+terminal emulator (Ghostty, Kitty, WezTerm, ...) in Cmd+Tab. The terminal is
+still the thing actually drawing yazi; Yapp is a clearly-labeled handle
+sitting alongside it. If you're looking for something that entirely replaces
+your terminal in the switcher, no shell-only wrapper on macOS can do that
+— it would need to ship its own terminal renderer, which Yapp intentionally
+does not.
 
 ## Install
 
@@ -30,8 +48,9 @@ yapp-cli launch ~/Downloads
 When launched from the `.app` bundle, Yapp runs as a real Cocoa application:
 it shows up in Cmd+Tab with its own icon, lives in the Dock for the duration
 of the yazi session, and has a minimal menu bar with `Hide` / `Quit Yapp`
-(`⌘Q`). Clicking Yapp's Dock icon brings the spawned terminal window back to
-the foreground.
+(`⌘Q`). Cmd+Tabbing to Yapp — or clicking Yapp's Dock icon — brings the
+terminal window rendering yazi back to the foreground, even if other windows
+were covering it.
 
 `⌘Q` in Yapp's menu quits **Yapp only** — the underlying terminal window and
 yazi keep running. Quit yazi the usual way (`q`) and Yapp disappears from
