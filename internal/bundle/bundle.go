@@ -3,6 +3,7 @@ package bundle
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 )
 
@@ -62,9 +63,62 @@ func Create(opts CreateOptions) error {
 		}
 	}
 
+	// Re-sign the bundle with an ad-hoc signature whose identifier
+	// matches CFBundleIdentifier. Without this step the Mach-O binary
+	// inherits Go's linker-generated signature (`Identifier=a.out`,
+	// Info.plist not bound, sealed resources=none) which disagrees with
+	// the enclosing bundle's declared identity. On recent macOS (tested
+	// on Tahoe / Darwin 25) that mismatch silently prevents the running
+	// process from appearing in Cmd+Tab even when LaunchServices has
+	// already registered it as type=Foreground. Re-signing makes the
+	// binary and the Info.plist agree cryptographically.
+	if err := signBundle(opts.AppPath, opts.BundleName, opts.BundleID); err != nil {
+		return fmt.Errorf("signing bundle: %w", err)
+	}
+
 	return nil
 }
 
 func Remove(appPath string) error {
 	return os.RemoveAll(appPath)
+}
+
+// signBundle ad-hoc signs the bundle inside-out: the Mach-O binary at
+// Contents/MacOS/<BundleName> first, then the bundle wrapper itself.
+// Both get the same --identifier (the CFBundleIdentifier) so that the
+// binary's signed identity matches the enclosing bundle's declared id,
+// which is a prerequisite for modern macOS Cmd+Tab visibility.
+//
+// `--sign -` is an ad-hoc signature (no Developer ID); that is fine for
+// a tool installed from source via a Homebrew tap -- the goal is just a
+// properly-bound signature, not Gatekeeper notarization.
+func signBundle(appPath, bundleName, bundleID string) error {
+	binaryPath := filepath.Join(appPath, "Contents", "MacOS", bundleName)
+
+	// Sign the inner Mach-O first. Apple recommends inside-out signing
+	// order for bundles; --deep is deprecated and does not always bind
+	// the parent plist correctly.
+	if out, err := exec.Command(
+		"/usr/bin/codesign",
+		"--force",
+		"--sign", "-",
+		"--identifier", bundleID,
+		binaryPath,
+	).CombinedOutput(); err != nil {
+		return fmt.Errorf("signing %s: %s: %w", binaryPath, out, err)
+	}
+
+	// Then sign the bundle wrapper. This binds Info.plist into the
+	// signature and produces the sealed-resources manifest.
+	if out, err := exec.Command(
+		"/usr/bin/codesign",
+		"--force",
+		"--sign", "-",
+		"--identifier", bundleID,
+		appPath,
+	).CombinedOutput(); err != nil {
+		return fmt.Errorf("signing %s: %s: %w", appPath, out, err)
+	}
+
+	return nil
 }
